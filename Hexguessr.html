@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hex Guesser</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    margin: 0;
+    padding: 30px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+#colorBox {
+    width: 300px;
+    height: 300px;
+    margin: 20px auto;
+    border-radius: 16px;
+    border: 3px solid white;
+}
+
+input {
+    font-size: 1.2rem;
+    padding: 10px;
+    width: 150px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 1.1rem;
+}
+
+.correct {
+    color: #4cff4c;
+}
+
+.score {
+    color: #87cefa;
+}
+
+.small {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+</style>
+</head>
+<body>
+
+<h1>🎨 Hex Guesser</h1>
+<p>Look at the color and guess its hex code.</p>
+
+<div id="colorBox"></div>
+
+<div>
+    <input id="guessInput" placeholder="#FFFFFF" maxlength="7">
+    <button onclick="submitGuess()">Guess</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+let targetColor;
+
+function randomByte() {
+    return Math.floor(Math.random() * 256);
+}
+
+function rgbToHex(r, g, b) {
+    return "#" +
+        r.toString(16).padStart(2, "0") +
+        g.toString(16).padStart(2, "0") +
+        b.toString(16).padStart(2, "0");
+}
+
+function generateColor() {
+    const r = randomByte();
+    const g = randomByte();
+    const b = randomByte();
+
+    targetColor = { r, g, b };
+    document.getElementById("colorBox").style.background =
+        rgbToHex(r, g, b);
+
+    document.getElementById("guessInput").value = "";
+}
+
+function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+
+    if (hex.length !== 6) return null;
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    if (isNaN(r) || isNaN(g) || isNaN(b))
+        return null;
+
+    return { r, g, b };
+}
+
+function submitGuess() {
+    const guess = document
+        .getElementById("guessInput")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const rgb = hexToRgb(guess);
+
+    if (!rgb) {
+        alert("Enter a valid hex code like #A1B2C3");
+        return;
+    }
+
+    const dr = rgb.r - targetColor.r;
+    const dg = rgb.g - targetColor.g;
+    const db = rgb.b - targetColor.b;
+
+    const distance = Math.sqrt(
+        dr * dr +
+        dg * dg +
+        db * db
+    );
+
+    const maxDistance = Math.sqrt(
+        255 * 255 * 3
+    );
+
+    const score = Math.max(
+        0,
+        Math.round(
+            (1 - distance / maxDistance) * 1000
+        )
+    );
+
+    const actualHex = rgbToHex(
+        targetColor.r,
+        targetColor.g,
+        targetColor.b
+    ).toUpperCase();
+
+    document.getElementById("result").innerHTML = `
+        <p class="correct">
+            Actual: ${actualHex}
+        </p>
+
+        <p class="score">
+            Score: ${score}/1000
+        </p>
+
+        <p>
+            RGB Error:
+            ${Math.round(distance)}
+        </p>
+
+        <p class="small">
+            New color generated!
+        </p>
+    `;
+
+    generateColor();
+}
+
+generateColor();
+
+document
+    .getElementById("guessInput")
+    .addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            submitGuess();
+        }
+    });
+</script>
+
+</body>
+</html>
